@@ -14,9 +14,14 @@ workflows:
           flutter clean
           flutter pub get
 
-      - name: Fix Gradle NDK version
+      - name: Check Gradle wrapper
         script: |
-          echo "android { ndkVersion = '27.0.12077973' }" >> android/app/build.gradle || true
+          if [ ! -f android/gradlew ]; then
+            echo "Gradle wrapper not found. Re-creating android directory."
+            rm -rf android
+            flutter create .
+            flutter pub get
+          fi
 
       - name: Build release APK
         script: |
