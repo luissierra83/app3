@@ -12,8 +12,12 @@ workflows:
       - name: Clean project
         script: |
           flutter clean
-          rm -f android/gradle.properties
           flutter pub get
+
+      - name: Recreate Android folder (si falla gradle)
+        script: |
+          rm -rf android
+          flutter create .
 
       - name: Build release APK
         script: |
