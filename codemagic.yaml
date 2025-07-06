@@ -11,10 +11,6 @@ workflows:
         script: |
           flutter pub get
 
-      - name: Generate launcher icon
-        script: |
-          flutter pub run flutter_launcher_icons:main
-
       - name: Build release APK
         script: |
           flutter build apk --$BUILD_TYPE
