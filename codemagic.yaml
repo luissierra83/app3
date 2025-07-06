@@ -25,7 +25,7 @@ workflows:
 
       - name: Fix Dart type error
         script: |
-          sed -i '' "s/int get bruto.*/int get bruto => productos.fold(0, (acc, p) => acc + (p['u'] * p['p']).round());/" lib/main.dart
+          sed -i '' "s/int get bruto.*/int get bruto => productos.fold<int>(0, (acc, p) => acc + (p['u'] * p['p']).toInt());/" lib/main.dart
 
       - name: Build release APK
         script: |
