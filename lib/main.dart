@@ -18,7 +18,6 @@ class ComprobanteForm extends StatefulWidget {
 
 class _ComprobanteFormState extends State<ComprobanteForm> {
   final _formKey = GlobalKey<FormState>();
-  final now = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
 
   String cliente = '';
   String negocio = '';
@@ -32,7 +31,18 @@ class _ComprobanteFormState extends State<ComprobanteForm> {
   final TextEditingController unidadesController = TextEditingController();
   final TextEditingController precioController = TextEditingController();
 
+  static const double tasaIVA = 0.19;
+
   void addProducto() {
+    if (codigoController.text.isEmpty ||
+        nombreController.text.isEmpty ||
+        unidadesController.text.isEmpty ||
+        precioController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('❗ Completa todos los campos del producto.')));
+      return;
+    }
+
     setState(() {
       productos.add({
         "codigo": codigoController.text,
@@ -48,13 +58,21 @@ class _ComprobanteFormState extends State<ComprobanteForm> {
   }
 
   int get bruto => productos.fold(0, (acc, p) => acc + (p['u'] * p['p']));
-  int get impuestos => (bruto * 0.19).toInt();
+  int get impuestos => (bruto * tasaIVA).toInt();
   int get total => bruto + impuestos;
 
   Future<void> exportPDF() async {
+    if (!_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('❗ Completa todos los campos obligatorios.')));
+      return;
+    }
+
+    final now = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
+
     final pdf = pw.Document();
     final directory = await getApplicationDocumentsDirectory();
-    final file = File("\${directory.path}/comprobante_pedido.pdf");
+    final file = File("${directory.path}/comprobante_pedido.pdf");
 
     pdf.addPage(
       pw.Page(
@@ -62,27 +80,28 @@ class _ComprobanteFormState extends State<ComprobanteForm> {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text("DULCENET - COMPROBANTE DE PEDIDO", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+              pw.Text("DULCENET - COMPROBANTE DE PEDIDO",
+                  style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
               pw.SizedBox(height: 10),
-              pw.Text("Fecha: \$now"),
-              pw.Text("Cliente: \$cliente"),
-              pw.Text("Negocio: \$negocio"),
-              pw.Text("Ciudad: \$ciudad"),
-              pw.Text("Teléfono: \$telefono"),
+              pw.Text("Fecha: $now"),
+              pw.Text("Cliente: $cliente"),
+              pw.Text("Negocio: $negocio"),
+              pw.Text("Ciudad: $ciudad"),
+              pw.Text("Teléfono: $telefono"),
               pw.SizedBox(height: 10),
               pw.Text("Productos:", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
               pw.Column(
                 children: productos.map((p) {
                   final t = p['u'] * p['p'];
-                  return pw.Text("\${p['codigo']} \${p['nombre']} - \${p['u']} x \$\${p['p']} = \$\${t}");
+                  return pw.Text("${p['codigo']} ${p['nombre']} - ${p['u']} x \$${p['p']} = \$${t}");
                 }).toList(),
               ),
               pw.SizedBox(height: 10),
-              pw.Text("VALOR BRUTO: \$\$bruto"),
-              pw.Text("IMPUESTOS: \$\$impuestos"),
-              pw.Text("GRAN TOTAL: \$\$total"),
+              pw.Text("VALOR BRUTO: \$${bruto}"),
+              pw.Text("IMPUESTOS: \$${impuestos}"),
+              pw.Text("GRAN TOTAL: \$${total}"),
               pw.SizedBox(height: 10),
-              pw.Text("Comentarios: \$comentario"),
+              pw.Text("Comentarios: $comentario"),
             ],
           );
         },
@@ -90,7 +109,8 @@ class _ComprobanteFormState extends State<ComprobanteForm> {
     );
 
     await file.writeAsBytes(await pdf.save());
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('📄 PDF guardado en: \${file.path}')));
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('📄 PDF guardado en: ${file.path}')));
   }
 
   @override
@@ -104,25 +124,69 @@ class _ComprobanteFormState extends State<ComprobanteForm> {
           child: ListView(
             children: [
               Image.asset('assets/logo.png', height: 100),
-              TextFormField(decoration: const InputDecoration(labelText: "Cliente"), onChanged: (v) => cliente = v),
-              TextFormField(decoration: const InputDecoration(labelText: "Negocio"), onChanged: (v) => negocio = v),
-              TextFormField(decoration: const InputDecoration(labelText: "Ciudad"), onChanged: (v) => ciudad = v),
-              TextFormField(decoration: const InputDecoration(labelText: "Teléfono"), onChanged: (v) => telefono = v),
+              TextFormField(
+                decoration: const InputDecoration(labelText: "Cliente"),
+                onChanged: (v) => cliente = v,
+                validator: (v) => v == null || v.isEmpty ? 'Campo requerido' : null,
+              ),
+              TextFormField(
+                decoration: const InputDecoration(labelText: "Negocio"),
+                onChanged: (v) => negocio = v,
+                validator: (v) => v == null || v.isEmpty ? 'Campo requerido' : null,
+              ),
+              TextFormField(
+                decoration: const InputDecoration(labelText: "Ciudad"),
+                onChanged: (v) => ciudad = v,
+                validator: (v) => v == null || v.isEmpty ? 'Campo requerido' : null,
+              ),
+              TextFormField(
+                decoration: const InputDecoration(labelText: "Teléfono"),
+                onChanged: (v) => telefono = v,
+                validator: (v) => v == null || v.isEmpty ? 'Campo requerido' : null,
+              ),
               const SizedBox(height: 10),
               const Text("Agregar Producto", style: TextStyle(fontWeight: FontWeight.bold)),
               TextField(controller: codigoController, decoration: const InputDecoration(labelText: "Código")),
               TextField(controller: nombreController, decoration: const InputDecoration(labelText: "Nombre")),
-              TextField(controller: unidadesController, decoration: const InputDecoration(labelText: "Unidades"), keyboardType: TextInputType.number),
-              TextField(controller: precioController, decoration: const InputDecoration(labelText: "Precio"), keyboardType: TextInputType.number),
+              TextField(
+                controller: unidadesController,
+                decoration: const InputDecoration(labelText: "Unidades"),
+                keyboardType: TextInputType.number,
+              ),
+              TextField(
+                controller: precioController,
+                decoration: const InputDecoration(labelText: "Precio"),
+                keyboardType: TextInputType.number,
+              ),
               ElevatedButton(onPressed: addProducto, child: const Text("Agregar producto")),
               const SizedBox(height: 10),
               const Text("Productos agregados:", style: TextStyle(fontWeight: FontWeight.bold)),
-              ...productos.map((p) => ListTile(
-                title: Text(p["nombre"]),
-                subtitle: Text("Unidades: \${p["u"]} - Precio: \$\${p["p"]}"),
-                trailing: Text("Total: \$\${p["u"] * p["p"]}"),
-              )),
-              TextFormField(decoration: const InputDecoration(labelText: "Comentario"), onChanged: (v) => comentario = v),
+              ...productos.asMap().entries.map((entry) {
+                final index = entry.key;
+                final p = entry.value;
+                return ListTile(
+                  title: Text(p["nombre"]),
+                  subtitle: Text("Unidades: ${p["u"]} - Precio: \$${p["p"]}"),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text("Total: \$${p["u"] * p["p"]}"),
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () {
+                          setState(() {
+                            productos.removeAt(index);
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              }),
+              TextFormField(
+                decoration: const InputDecoration(labelText: "Comentario"),
+                onChanged: (v) => comentario = v,
+              ),
               const SizedBox(height: 10),
               ElevatedButton(onPressed: exportPDF, child: const Text("📄 Generar PDF")),
             ],
