@@ -14,10 +14,9 @@ workflows:
           flutter clean
           flutter pub get
 
-      - name: Recreate Android folder (si falla gradle)
+      - name: Fix NDK version
         script: |
-          rm -rf android
-          flutter create .
+          echo 'android { ndkVersion = "27.0.12077973" }' >> android/app/build.gradle
 
       - name: Build release APK
         script: |
