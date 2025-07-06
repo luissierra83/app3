@@ -14,10 +14,6 @@ workflows:
           flutter clean
           flutter pub get
 
-      - name: Fix NDK version
-        script: |
-          echo 'android { ndkVersion = "27.0.12077973" }' >> android/app/build.gradle
-
       - name: Build release APK
         script: |
           flutter build apk --release
