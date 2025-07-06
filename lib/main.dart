@@ -57,7 +57,7 @@ class _ComprobanteFormState extends State<ComprobanteForm> {
     });
   }
 
-  int get bruto => productos.fold(0, (acc, p) => acc + (p['u'] * p['p']));
+  int get bruto => productos.fold(0, (acc, p) => acc + ((p['u'] * p['p']).toInt()));
   int get impuestos => (bruto * tasaIVA).toInt();
   int get total => bruto + impuestos;
 
