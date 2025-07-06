@@ -14,15 +14,13 @@ workflows:
           flutter clean
           flutter pub get
 
-      - name: Recreate android folder (fix Gradle issue)
+      - name: Fix Gradle NDK version
         script: |
-          rm -rf android
-          flutter create .
-          flutter pub get
+          echo "android { ndkVersion = '27.0.12077973' }" >> android/app/build.gradle || true
 
       - name: Build release APK
         script: |
-          flutter build apk --release
+          flutter build apk --release --no-shrink
 
     artifacts:
       - build/app/outputs/flutter-apk/app-release.apk
