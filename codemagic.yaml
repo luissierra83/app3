@@ -4,8 +4,6 @@ workflows:
     max_build_duration: 20
     environment:
       flutter: stable
-      android_signing:
-        - your_keystore_reference
     scripts:
       - name: Get dependencies
         script: |
