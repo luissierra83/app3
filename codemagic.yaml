@@ -14,7 +14,7 @@ workflows:
           flutter clean
           flutter pub get
 
-      - name: Check Gradle wrapper
+      - name: Fix Gradle wrapper
         script: |
           if [ ! -f android/gradlew ]; then
             echo "Gradle wrapper not found. Re-creating android directory."
@@ -22,6 +22,10 @@ workflows:
             flutter create .
             flutter pub get
           fi
+
+      - name: Fix Dart type error
+        script: |
+          sed -i '' "s/int get bruto.*/int get bruto => productos.fold(0, (acc, p) => acc + (p['u'] * p['p']).round());/" lib/main.dart
 
       - name: Build release APK
         script: |
