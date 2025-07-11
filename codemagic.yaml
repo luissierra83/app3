@@ -1,39 +1,18 @@
 workflows:
   build-apk:
-    name: Build APK - Pedido PDF
-    max_build_duration: 20
+    name: Build APK for Comprobante Pedido
+    max_build_duration: 15
     environment:
       flutter: stable
+      android:
+        ndk: 27.0.12077973
     scripts:
       - name: Get dependencies
-        script: |
-          flutter pub get
-
-      - name: Clean project
-        script: |
-          flutter clean
-          flutter pub get
-
-      - name: Fix Gradle wrapper
-        script: |
-          if [ ! -f android/gradlew ]; then
-            echo "Gradle wrapper not found. Re-creating android directory."
-            rm -rf android
-            flutter create .
-            flutter pub get
-          fi
-
-      - name: Fix Dart type error
-        script: |
-          sed -i '' "s/int get bruto.*/int get bruto => productos.fold<int>(0, (acc, p) => acc + (p['u'] * p['p']).toInt());/" lib/main.dart
-
+        script: flutter pub get
       - name: Build release APK
-        script: |
-          flutter build apk --release --no-shrink
-
+        script: flutter build apk --release
     artifacts:
       - build/app/outputs/flutter-apk/app-release.apk
-
     publishing:
       email:
         recipients:
